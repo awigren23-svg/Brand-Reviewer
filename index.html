@@ -516,6 +516,11 @@
     <button class="lang-btn" onclick="setLang('de', this)">Deutsch</button>
   </div>
 
+  <div class="text-input-wrap" style="margin-bottom:20px;">
+    <label for="apiKeyInput">Anthropic API Key</label>
+    <input type="password" id="apiKeyInput" placeholder="sk-ant-..." oninput="checkReady()" style="width:100%;padding:10px 14px;border:1.5px solid var(--mid-grey);border-radius:10px;font-size:14px;font-family:inherit;color:var(--brand-blue);background:#fff;outline:none;" />
+  </div>
+
   <div class="upload-zone" id="uploadZone">
     <input type="file" id="fileInput" accept="image/*" multiple onchange="handleFiles(this.files)">
     <div class="upload-icon">
@@ -615,7 +620,8 @@
   function checkReady() {
     const hasFile = uploadedFiles.length > 0;
     const hasText = document.getElementById('copyInput').value.trim().length > 0;
-    document.getElementById('submitBtn').disabled = !(hasFile || hasText);
+    const hasKey = document.getElementById('apiKeyInput').value.trim().length > 0;
+    document.getElementById('submitBtn').disabled = !(hasKey && (hasFile || hasText));
   }
 
   document.getElementById('copyInput').addEventListener('input', checkReady);
@@ -781,9 +787,15 @@
 
       let response;
       try {
+        const apiKey = document.getElementById('apiKeyInput').value.trim();
         response = await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+            'anthropic-dangerous-direct-browser-access': 'true'
+          },
           body: JSON.stringify({
             model: 'claude-sonnet-4-20250514',
             max_tokens: 4000,
